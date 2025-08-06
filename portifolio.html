@@ -1,0 +1,548 @@
+<!DOCTYPE html> 
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Meu Portfólio Vaporwave</title>
+  <style>
+    * {
+      user-select: none;
+    }
+
+    #cmd-window .prompt {
+      background: black;
+      color: #0f0;
+      font-family: monospace;
+      padding: 10px;
+    }
+
+    #cmd-input {
+      width: 100%;
+      background: black;
+      color: #0f0;
+      border: none;
+      font-family: monospace;
+      font-size: 14px;
+      outline: none;
+    }
+
+    ::selection {
+      background: transparent;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Courier New', Courier, monospace;
+      background:
+        linear-gradient(135deg, #ff61a6 0%, #ffd7e8 50%, #6eafff 100%);
+      color: black;
+      overflow: hidden;
+      cursor: url('https://cur.cursors-4u.net/symbols/sym-7/sym638.cur'), auto;
+    }
+
+    #boot-screen, #shutdown-screen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 100%;
+      width: 100%;
+      background: black;
+      color: #0f0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 20px;
+      z-index: 999;
+      user-select: none;
+    }
+
+    .desktop {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      background: linear-gradient(to bottom, #000011 0%, #330033 100%);
+      display: none;
+      overflow: hidden;
+    }
+
+    /* Ícones */
+    .icon {
+      position: absolute;
+      width: 64px;
+      text-align: center;
+      font-size: 12px;
+      color: white;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .icon img {
+      width: 64px;
+      height: 64px;
+      transition: transform 0.2s;
+      border-radius: 8px;
+      border: 1px solid #0ff;
+      background: rgba(0,0,0,0.3);
+      box-shadow: 0 0 10px #0ff;
+    }
+
+    .icon:hover img {
+      transform: scale(1.1);
+      box-shadow: 0 0 20px #0ff, 0 0 40px #f0f;
+    }
+
+    /* Janelas */
+    .window {
+      position: absolute;
+      width: 300px;
+      background: white;
+      border: 3px solid #0ff;
+      box-shadow: 0 0 20px #0ff, 0 0 40px #f0f;
+      display: none;
+      animation: fadeScaleGlitch 0.6s ease forwards;
+      z-index: 10;
+      color: black;
+      user-select: text;
+      overflow: hidden;
+      border-radius: 6px;
+    }
+
+    @keyframes fadeScaleGlitch {
+      0% { opacity: 0; transform: scale(0.8) translate(0, 0); filter: none; }
+      30% { opacity: 1; transform: scale(1.05) translate(-2px, 2px); filter: drop-shadow(2px 0 #0ff) drop-shadow(-2px 0 #f0f); }
+      60% { transform: scale(1) translate(1px, -1px); filter: drop-shadow(1px 0 #0ff) drop-shadow(-1px 0 #f0f); }
+      100% { opacity: 1; transform: scale(1) translate(0, 0); filter: none; }
+    }
+
+    .title-bar {
+      background: #0ff;
+      color: black;
+      font-weight: bold;
+      padding: 5px 10px;
+      cursor: move;
+      display: flex;
+      justify-content: space-between;
+      border-top-left-radius: 6px;
+      border-top-right-radius: 6px;
+      user-select: none;
+    }
+
+    .close-btn {
+      background: red;
+      border: none;
+      color: white;
+      cursor: pointer;
+      padding: 0 6px;
+      border-radius: 3px;
+      font-weight: bold;
+    }
+
+    .content {
+      padding: 10px;
+      color: black;
+      font-size: 14px;
+      line-height: 1.3em;
+    }
+
+    /* VHS Overlay */
+    .vhs-overlay {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      background:
+        repeating-linear-gradient(0deg, rgba(255,255,255,0.03), rgba(255,255,255,0.03) 2px, transparent 2px, transparent 4px),
+        linear-gradient(90deg, rgba(255,0,255,0.05) 0%, transparent 50%, rgba(0,255,255,0.05) 100%);
+      z-index: 99;
+      animation: vhsFlicker 0.3s infinite, vhsDistort 1.2s infinite alternate;
+      mix-blend-mode: screen;
+    }
+
+    @keyframes vhsFlicker {
+      0%, 100% { opacity: 0.9; filter: brightness(1); }
+      50% { opacity: 1; filter: brightness(1.2); }
+    }
+
+    @keyframes vhsDistort {
+      0% { transform: translateY(0px) scaleX(1); }
+      50% { transform: translateY(-2px) scaleX(1.05); }
+      100% { transform: translateY(2px) scaleX(0.95); }
+    }
+
+    /* Jogo da Memória */
+    #memory-game {
+      position: absolute;
+      width: 400px;
+      height: 300px;
+      background: #111;
+      border: 3px solid #0ff;
+      box-shadow: 0 0 20px #0ff, 0 0 40px #f0f;
+      color: white;
+      display: none;
+      padding: 10px;
+      overflow: auto;
+      border-radius: 6px;
+    }
+
+    .card {
+      width: 60px;
+      height: 60px;
+      margin: 5px;
+      display: inline-block;
+      background: #222;
+      cursor: pointer;
+    }
+
+    .card img {
+      width: 100%;
+      height: 100%;
+      display: none;
+      border-radius: 6px;
+    }
+
+    .card.flipped img {
+      display: block;
+    }
+
+    .cat-gif {
+      position: absolute;
+      width: 150px;
+      pointer-events: none;
+      animation: float 5s infinite ease-in-out;
+      border-radius: 10px;
+      box-shadow: 0 0 15px #0ff, 0 0 25px #f0f;
+      filter: drop-shadow(0 0 5px #0ff);
+    }
+
+    @keyframes float {
+      0% { transform: translateY(0px); }
+      50% { transform: translateY(-15px); }
+      100% { transform: translateY(0px); }
+    }
+
+    .shutdown-btn {
+      position: absolute;
+      bottom: 10px;
+      right: 10px;
+      background: red;
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      font-weight: bold;
+      cursor: pointer;
+      z-index: 1000;
+      border-radius: 6px;
+      box-shadow: 0 0 15px red;
+      transition: background 0.3s;
+    }
+
+    .shutdown-btn:hover {
+      background: darkred;
+    }
+  </style>
+</head>
+<body>
+  <div id="boot-screen">Carregando sistema retrô...</div>
+  <div id="shutdown-screen" style="display:none;">Desligando...</div>
+
+  <div class="desktop" id="desktop">
+    <!-- Ícones -->
+    <div class="icon" style="top: 100px; left: 50px;" onclick="openWindow('projetos')">
+      <img src="https://cdn-icons-png.flaticon.com/512/109/109612.png" alt="Projetos"/>
+      <div>Projetos</div>
+    </div>
+
+    <div class="icon" style="top: 190px; left: 50px;" onclick="openWindow('sobre')">
+      <img src="https://cdn-icons-png.flaticon.com/512/2922/2922561.png" alt="Sobre"/>
+      <div>Sobre Mim</div>
+    </div>
+
+    <div class="icon" style="top: 290px; left: 50px;" onclick="openWindow('cmd-window')">
+      <img src="https://cdn-icons-png.flaticon.com/512/1828/1828778.png" alt="CMD"/>
+      <div>CMD</div>
+    </div>
+
+    <!-- Janelas -->
+    <div class="window" id="cmd-window" style="top:200px; left:300px; width:350px;">
+      <div class="title-bar" onmousedown="dragWindow(event)">
+        Terminal Fake
+        <button class="close-btn" onclick="closeWindow('cmd-window')">X</button>
+      </div>
+      <div class="content">
+        <div class="prompt">C:\&gt;</div>
+        <input id="cmd-input" type="text" placeholder="Digite comando e pressione Enter…" autofocus />
+      </div>
+    </div>
+
+    <div id="memory-game" class="window" style="top:250px; left:400px;">
+      <div class="title-bar" onmousedown="dragWindow(event)">
+        Jogo da Memória - Gatinhos
+        <button class="close-btn" onclick="closeWindow('memory-game')">X</button>
+      </div>
+      <div class="content" id="memory-content"></div>
+    </div>
+
+    <div class="window" id="projetos" style="top: 150px; left: 200px;">
+      <div class="title-bar" onmousedown="dragWindow(event)">
+        Meus Projetos
+        <button class="close-btn" onclick="closeWindow('projetos')">X</button>
+      </div>
+      <div class="content">
+        <p>🎨 Projeto 1: <a href="#" style="color:#0ff;">Arte Vaporwave</a></p>
+        <p>🎶 Projeto 2: <a href="#" style="color:#0ff;">Lo-fi Player</a></p>
+        <p>🖥️ Projeto 3: <a href="#" style="color:#0ff;">Terminal Retro MS-DOS</a></p>
+      </div>
+    </div>
+
+    <div class="window" id="sobre" style="top: 220px; left: 400px;">
+      <div class="title-bar" onmousedown="dragWindow(event)">
+        Sobre Mim
+        <button class="close-btn" onclick="closeWindow('sobre')">X</button>
+      </div>
+      <div class="content">
+        <p>👾 Desenvolvedor apaixonado por estética retrô e webcore 90s.</p>
+      </div>
+    </div>
+
+    <!-- VHS Overlay -->
+    <div class="vhs-overlay"></div>
+
+    <!-- Gatinhos indie -->
+    <img class="cat-gif" src="https://media.tenor.com/13MO7LUAShwAAAAM/fadding-cat.gif" style="top: 50px; right: 50px;" alt="gato fofo" />
+    <img class="cat-gif" src="https://i.redd.it/8kp00dh00b2e1.gif" style="bottom: 80px; left: 100px;" alt="gato fofo" />
+    <img class="cat-gif" src="https://media.tenor.com/59kry_RgmtkAAAAM/cat.gif" style="bottom: 150px; right: 100px;" alt="gato fofo" />
+    <img class="cat-gif" src="https://media.tenor.com/R514o0vP7kEAAAAM/weird-stare.gif" style="bottom: 675px; right: 900px;"/>
+
+    <!-- Botão Desligar -->
+    <button class="shutdown-btn" onclick="shutdown()">Desligar</button>
+  </div>
+
+  <!-- Áudios -->
+  <audio id="click-sound" src="mixkit-arcade-game-jump-coin-216.wav"></audio>
+  <audio id="virus-sound" src="https://www.myinstants.com/media/sounds/windows-xp-error.mp3"></audio>
+
+  <!-- Scripts -->
+  <script>
+    // Mostrar a área de trabalho depois do boot
+    window.onload = () => {
+      setTimeout(() => {
+        document.getElementById('boot-screen').style.display = 'none';
+        document.getElementById('desktop').style.display = 'block';
+        document.getElementById('cmd-input').focus();
+      }, 3000); // 3 segundos
+    };
+
+    // Abrir janela
+    function openWindow(id) {
+      playClick();
+      closeAllWindows();
+      const win = document.getElementById(id);
+      if (win) {
+        win.style.display = 'block';
+        win.style.zIndex = 100;
+      }
+      if (id === 'memory-game') {
+        startMemoryGame();
+      }
+    }
+
+    // Fechar janela
+    function closeWindow(id) {
+      const win = document.getElementById(id);
+      if (win) {
+        win.style.display = 'none';
+      }
+    }
+
+    // Fechar todas janelas
+    function closeAllWindows() {
+      document.querySelectorAll('.window').forEach(w => {
+        w.style.display = 'none';
+      });
+    }
+
+    // Sons
+    function playClick() {
+      const click = document.getElementById('click-sound');
+      if (click) {
+        click.currentTime = 0;
+        click.play();
+      }
+    }
+
+    function playVirus() {
+      const virus = document.getElementById('virus-sound');
+      if (virus) {
+        virus.currentTime = 0;
+        virus.play();
+      }
+    }
+
+    // Arrastar janela
+    let dragObj = null;
+    let offsetX = 0;
+    let offsetY = 0;
+
+    function dragWindow(e) {
+      dragObj = e.target.parentElement;
+      offsetX = e.clientX - dragObj.offsetLeft;
+      offsetY = e.clientY - dragObj.offsetTop;
+      document.onmousemove = dragMove;
+      document.onmouseup = dragStop;
+    }
+
+    function dragMove(e) {
+      if (!dragObj) return;
+      dragObj.style.left = (e.clientX - offsetX) + 'px';
+      dragObj.style.top = (e.clientY - offsetY) + 'px';
+    }
+
+    function dragStop() {
+      dragObj = null;
+      document.onmousemove = null;
+      document.onmouseup = null;
+    }
+
+    // Terminal CMD simples
+    const cmdInput = document.getElementById('cmd-input');
+    cmdInput?.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        processCommand(e.target.value);
+        e.target.value = '';
+      }
+    });
+
+    function processCommand(cmd) {
+      const promptDiv = document.querySelector('#cmd-window .prompt');
+      if (!promptDiv) return;
+      let output = '';
+      const command = cmd.trim().toLowerCase();
+
+      switch(command) {
+        case 'help':
+          output = 'Comandos: help, clear, sobre, jogos';
+          break;
+        case 'clear':
+          promptDiv.innerHTML = 'C:\\&gt;';
+          return;
+        case 'sobre':
+          openWindow('sobre');
+          output = 'Abrindo janela Sobre Mim...';
+          break;
+        case 'jogos':
+          openWindow('memory-game');
+          output = 'Abrindo jogo da memória...';
+          break;
+        default:
+          output = `Comando não encontrado: ${cmd}`;
+          playVirus();
+          break;
+      }
+
+      promptDiv.innerHTML += `<br>${output}<br>C:\\&gt;`;
+      scrollCmdToBottom();
+    }
+
+    function scrollCmdToBottom() {
+      const content = document.querySelector('#cmd-window .content');
+      if (content) content.scrollTop = content.scrollHeight;
+    }
+
+    // Jogo da memória simples
+    const cardsData = [
+      'https://placekitten.com/60/60',
+      'https://placekitten.com/61/60',
+      'https://placekitten.com/62/60',
+      'https://placekitten.com/63/60',
+      'https://placekitten.com/64/60',
+      'https://placekitten.com/65/60'
+    ];
+
+    let firstCard = null;
+    let secondCard = null;
+    let lockBoard = false;
+    let matches = 0;
+
+    function startMemoryGame() {
+      const memoryContent = document.getElementById('memory-content');
+      if (!memoryContent) return;
+
+      matches = 0;
+      firstCard = null;
+      secondCard = null;
+      lockBoard = false;
+
+      const cards = [...cardsData, ...cardsData]; // duplicar para pares
+      shuffle(cards);
+
+      memoryContent.innerHTML = '';
+
+      cards.forEach((src, index) => {
+        const card = document.createElement('div');
+        card.classList.add('card');
+        card.dataset.src = src;
+
+        const img = document.createElement('img');
+        img.src = src;
+        img.alt = 'gato fofo';
+
+        card.appendChild(img);
+
+        card.onclick = () => {
+          if (lockBoard || card.classList.contains('flipped')) return;
+
+          card.classList.add('flipped');
+
+          if (!firstCard) {
+            firstCard = card;
+            return;
+          }
+
+          secondCard = card;
+          lockBoard = true;
+
+          if (firstCard.dataset.src === secondCard.dataset.src) {
+            matches++;
+            resetBoard();
+            if (matches === cardsData.length) {
+              alert('Parabéns! Você encontrou todos os pares!');
+            }
+          } else {
+            setTimeout(() => {
+              firstCard.classList.remove('flipped');
+              secondCard.classList.remove('flipped');
+              resetBoard();
+            }, 1000);
+          }
+        };
+
+        memoryContent.appendChild(card);
+      });
+    }
+
+    function shuffle(array) {
+      for (let i = array.length -1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+    }
+
+    function resetBoard() {
+      [firstCard, secondCard] = [null, null];
+      lockBoard = false;
+    }
+
+    // Botão desligar
+    function shutdown() {
+      document.getElementById('desktop').style.display = 'none';
+      document.getElementById('shutdown-screen').style.display = 'flex';
+      setTimeout(() => {
+        alert('Sistema desligado.');
+        location.reload();
+      }, 3000);
+    }
+  </script>
+</body>
+</html>
+
